@@ -2,10 +2,7 @@
 
 namespace PROG_POE1.Controllers
 {
-    using Microsoft.AspNetCore.Mvc;
-
-    namespace CMCS.Controllers
-    {
+    
         public class AccountController : Controller
         {
             // Display the Login page
@@ -41,6 +38,6 @@ namespace PROG_POE1.Controllers
                 return RedirectToAction("Login");
             }
         }
-    }
+    
 
 }
