@@ -2,9 +2,17 @@
 
 namespace PROG_POE1.Controllers
 {
+
+    
     
         public class AccountController : Controller
         {
+            // Simulating a user database
+            private static List<(string username, string password)> Users = new List<(string username, string password)>
+        {
+            ("admin", "password")
+        };
+
             // Display the Login page
             public IActionResult Login()
             {
@@ -15,13 +23,14 @@ namespace PROG_POE1.Controllers
             [HttpPost]
             public IActionResult Login(string username, string password)
             {
-                // Placeholder: Check username and password (authentication logic)
-                // Redirect to home page on successful login, or show an error message on failure
-                bool isAuthenticated = (username == "admin" && password == "password"); // Simplified example
+                // Check username and password (authentication logic)
+                var user = Users.Find(u => u.username == username && u.password == password);
 
-                if (isAuthenticated)
+                if (user != default)
                 {
                     // Placeholder: Perform login logic (e.g., set authentication cookie or session)
+                    TempData["Username"] = username; // Temporarily storing username for demonstration
+
                     return RedirectToAction("Index", "Home");
                 }
                 else
@@ -34,10 +43,14 @@ namespace PROG_POE1.Controllers
             // Handle the logout action
             public IActionResult Logout()
             {
-                // Placeholder: Perform logout logic (e.g., clear authentication cookie or session)
+                // Clear the TempData (simulating user logout)
+                TempData.Remove("Username");
+
                 return RedirectToAction("Login");
             }
         }
     
+
+
 
 }
