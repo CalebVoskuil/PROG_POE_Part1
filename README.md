@@ -1,6 +1,5 @@
-Here's the updated **README.md** file with the correct syntax for bold letters and links:
 
----
+
 
 # Contract Monthly Claim System (CMCS)
 
