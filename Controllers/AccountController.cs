@@ -3,8 +3,6 @@
 namespace PROG_POE1.Controllers
 {
 
-    
-    
         public class AccountController : Controller
         {
             // Simulating a user database
@@ -49,8 +47,5 @@ namespace PROG_POE1.Controllers
                 return RedirectToAction("Login");
             }
         }
-    
-
-
-
 }
+
