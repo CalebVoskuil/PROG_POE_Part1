@@ -14,5 +14,6 @@ namespace PROG_POE1.ViewModels
 
         [Display(Name = "Remember Me")]
         public bool RememberMe { get; set; }
+      
     }
 }

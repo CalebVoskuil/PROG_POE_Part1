@@ -26,6 +26,14 @@ namespace PROG_POE1.Controllers
             return View();
         }
 
+        [HttpGet]
+        public IActionResult Login(string role, string returnUrl = null)
+        {
+            ViewBag.Role = role; // Pass the role to the view if needed
+            return View();
+        }
+
+
 
         // Redirects the user to the appropriate login page based on role
         public IActionResult LoginAsLecturer()
@@ -39,29 +47,39 @@ namespace PROG_POE1.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login(LoginViewModel model, string role, string returnUrl = null)
+        public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
         {
             if (ModelState.IsValid)
             {
                 var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
+
                 if (result.Succeeded)
                 {
                     var user = await _userManager.FindByEmailAsync(model.Email);
-                    if (await _userManager.IsInRoleAsync(user, role))
+
+                    // Check user role
+                    if (await _userManager.IsInRoleAsync(user, "Lecturer"))
                     {
-                        if (role == "Lecturer")
-                        {
-                            return RedirectToAction("Submit", "Claim");
-                        }
-                        else if (role == "Coordinator")
-                        {
-                            return RedirectToAction("ReviewClaims", "Claim");
-                        }
+                        return RedirectToAction("Submit", "Claim");
+                    }
+                    else if (await _userManager.IsInRoleAsync(user, "Coordinator"))
+                    {
+                        return RedirectToAction("ReviewClaims", "Claim");
                     }
                 }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                }
             }
+
             return View(model);
         }
+
+
+
+
+
     }
 
 }

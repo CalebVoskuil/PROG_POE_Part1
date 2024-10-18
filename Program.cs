@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using PROG_POE1.Data;
 
 /// <summary>
@@ -12,75 +13,121 @@ using PROG_POE1.Data;
 /// https://youtu.be/wxznTygnRfQ?si=YdSPdyKekHStCUFz
 /// Repository link : https://github.com/CalebVoskuil/PROG_POE_Part1.git
 /// </summary>
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using PROG_POE1.Data;
+
+
+
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Configure services
 builder.Services.AddControllersWithViews();
 
-// Add DbContext and Identity services
+// Add Entity Framework and Identity services
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Part2")));
 
-builder.Services.AddIdentity<IdentityUser, IdentityRole>()
-    .AddEntityFrameworkStores<AppDbContext>()
-    .AddDefaultTokenProviders();
+builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
+{
+    // Configure identity options here
+    options.Password.RequireDigit = true;
+    options.Password.RequiredLength = 6;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireLowercase = true;
+}).AddEntityFrameworkStores<AppDbContext>()
+  .AddDefaultTokenProviders();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+// Seed the database
+using (var scope = app.Services.CreateScope())
 {
-    app.UseExceptionHandler("/Home/Error");
+    var services = scope.ServiceProvider;
+    try
+    {
+        await CreateDefaultUsers(services);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred seeding the DB.");
+    }
+}
+
+// Configure the HTTP request pipeline
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+else
+{
+    app.UseExceptionHandler("/Home/Error"); // Replace with your error handling page
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-app.UseRouting();
-app.UseAuthentication();  // Ensure that authentication is added
-app.UseAuthorization();
 
-// Add the role seeding logic here
-using (var scope = app.Services.CreateScope())
-{
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
-    await SeedRoles(roleManager, userManager);
-}
+app.UseRouting();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-app.Run();
+await app.RunAsync();
 
-// Method to seed roles
-async Task SeedRoles(RoleManager<IdentityRole> roleManager, UserManager<IdentityUser> userManager)
+// Method to seed the database with default users
+static async Task CreateDefaultUsers(IServiceProvider serviceProvider)
 {
-    string[] roleNames = { "Lecturer", "Coordinator" };
+    var userManager = serviceProvider.GetRequiredService<UserManager<IdentityUser>>();
+    var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-    foreach (var roleName in roleNames)
+    // Create roles if they do not exist
+    string[] roles = { "Lecturer", "Coordinator" };
+    foreach (var role in roles)
     {
-        if (!await roleManager.RoleExistsAsync(roleName))
+        if (!await roleManager.RoleExistsAsync(role))
         {
-            await roleManager.CreateAsync(new IdentityRole(roleName));
+            await roleManager.CreateAsync(new IdentityRole(role));
         }
     }
 
-    // Optionally, seed some users with these roles
-    // Example: Seeding an admin user for testing
-    var user = new IdentityUser { UserName = "lecturer@domain.com", Email = "lecturer@domain.com" };
-    var result = await userManager.CreateAsync(user, "Password123!");
-
-    if (result.Succeeded)
+    // Create and seed the Lecturer user
+    var lecturer = new IdentityUser
     {
-        await userManager.AddToRoleAsync(user, "Lecturer");
+        UserName = "lecturer@example.com",
+        Email = "lecturer@example.com",
+        EmailConfirmed = true
+    };
+    var lecturerPassword = "Lecturer@123";
+    var resultLecturer = await userManager.CreateAsync(lecturer, lecturerPassword);
+    if (resultLecturer.Succeeded)
+    {
+        await userManager.AddToRoleAsync(lecturer, "Lecturer");
+    }
+
+    // Create and seed the Coordinator user
+    var coordinator = new IdentityUser
+    {
+        UserName = "coordinator@example.com",
+        Email = "coordinator@example.com",
+        EmailConfirmed = true
+    };
+    var coordinatorPassword = "Coordinator@123";
+    var resultCoordinator = await userManager.CreateAsync(coordinator, coordinatorPassword);
+    if (resultCoordinator.Succeeded)
+    {
+        await userManager.AddToRoleAsync(coordinator, "Coordinator");
     }
 }
+
+
+
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^~~^^~~^^~[ End of File ]~^^~~^^~~^^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
