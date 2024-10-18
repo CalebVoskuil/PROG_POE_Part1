@@ -1,6 +1,6 @@
 
 
-
+```markdown
 # Contract Monthly Claim System (CMCS)
 
 The **Contract Monthly Claim System (CMCS)** is a web-based application developed using **ASP.NET Core MVC**. The system allows Independent Contractor (IC) lecturers to submit their monthly claims, track their claim history, and manage their accounts. It also includes features for administrators to review and approve submitted claims.
@@ -8,10 +8,9 @@ The **Contract Monthly Claim System (CMCS)** is a web-based application develope
 ## Table of Contents
 - [Prerequisites](#prerequisites)
 - [Installation and Setup](#installation-and-setup)
+- [Acquiring the Local Database](#acquiring-the-local-database)
 - [Running the Application](#running-the-application)
 - [Usage](#usage)
-- [Controllers and Views](#controllers-and-views)
-- [Classes and Models](#classes-and-models)
 - [Troubleshooting](#troubleshooting)
 
 ## Prerequisites
@@ -38,22 +37,47 @@ Follow these steps to set up the project:
    dotnet restore
    ```
 
-3. **Database Setup** (Optional):
-   - If the application requires a database, configure the **connection string** in the `appsettings.json` file.
-   - Run **Entity Framework** migrations (if applicable) to set up your database schema:
-     ```bash
-     dotnet ef database update
-     ```
-
-4. **Build the Project**:
+3. **Build the Project**:
    Compile and build the project:
    ```bash
    dotnet build
    ```
 
+## Acquiring the Local Database
+
+To set up the local database on your machine, follow these steps:
+
+1. **Open the Database Project**:
+   - If you have a separate database project, open it in Visual Studio. If the database is part of the main project, you can skip this step.
+
+2. **Check the Connection String**:
+   - Ensure the connection string in the `appsettings.json` file is pointing to your local SQL Server instance. The typical connection string looks like this:
+     ```json
+     "ConnectionStrings": {
+       "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=CMCS;Trusted_Connection=True;MultipleActiveResultSets=true"
+     }
+     ```
+
+3. **Create the Local Database**:
+   - If you haven't created the database yet, you can do this through Visual Studio:
+     - Right-click on the project in **Solution Explorer** and select **Add > New Item**.
+     - Choose **SQL Server Database** and give it a name (e.g., `CMCS.mdf`).
+     - After creating it, right-click the database file in **Solution Explorer** and select **Open** to launch the SQL Server Object Explorer.
+     - From here, you can right-click the database and select **New Query** to run any necessary SQL scripts to set up your schema.
+
+4. **Run Entity Framework Migrations** (if applicable):
+   - If you are using Entity Framework Core, ensure your migrations are up to date:
+     ```bash
+     dotnet ef database update
+     ```
+   - This command will apply any pending migrations to your local database.
+
+5. **Seed the Database** (if needed):
+   - If your application requires initial data (like hardcoded users), ensure that the seeding logic is implemented in your `DbContext` or wherever your application handles database initialization.
+
 ## Running the Application
 
-After setting up the application, run it with the following command:
+After setting up the local database, run the application with the following command:
 
 ```bash
 dotnet run
@@ -69,73 +93,20 @@ https://localhost:5001
 
 ## Usage
 
-- **Home Page**: Upon launching the application, you will be taken to the home page, which allows navigation to different parts of the system.
-- **Submit a Claim**: You can submit new claims by navigating to the "Submit a Claim" section.
-- **Claim History**: View the history of all claims submitted by the logged-in lecturer.
-- **Login**: Use the login page to authenticate as an Independent Contractor (IC) lecturer or an administrator.
+- Independent Contractor (IC) lecturers can log in to submit their monthly claims.
+- Administrators can review and approve submitted claims.
+- The application provides a user-friendly interface for managing claims and tracking history.
 
-### Navigation Buttons:
-- **Submit a Claim**: Directs you to the form where you can submit a new claim.
-- **View Claim History**: Displays the list of all previously submitted claims.
-- **Login**: Takes you to the login page where ICs or administrators can log into their accounts.
-
-## Controllers and Views
-
-### Controllers:
-The application contains the following controllers, each handling different parts of the system:
-
-1. **HomeController**:
-   - Manages the home page.
-   - Default landing page with navigation links.
-  
-2. **ClaimController**:
-   - `Submit`: Handles claim submission form and processes the form data.
-   - `History`: Displays a list of previously submitted claims by the user.
-  
-3. **AccountController**:
-   - `Login`: Manages the login process for Independent Contractors and administrators.
-
-### Views:
-- **Views/Home/Index.cshtml**: The home page of the application.
-- **Views/Claim/Submit.cshtml**: The form to submit new claims.
-- **Views/Claim/History.cshtml**: Displays a list of submitted claims.
-- **Views/Account/Login.cshtml**: Login page for users to authenticate.
-
-## Classes and Models
-
-### `Claim` Class:
-Represents a claim submitted by a lecturer. It contains the following properties:
-- `ClaimId`: The unique identifier for each claim.
-- `TotalHours`: The total number of hours worked.
-- `HourlyRate`: The rate per hour.
-- `Comments`: Additional comments provided by the user.
-- `TotalAmount`: Calculated value based on `TotalHours * HourlyRate`.
-- `DateSubmitted`: The date when the claim was submitted.
-
-### `User` Class:
-Represents a user in the system, either an Independent Contractor or an administrator. This class handles basic user information and authentication:
-- `UserId`: Unique identifier for the user.
-- `Username`: Login name for the user.
-- `Password`: User password for login authentication.
-- `Role`: Specifies whether the user is an IC or administrator.
-
-### `LoginViewModel` Class:
-Handles the login form submission and validation.
-- `Username`: Stores the username entered during login.
-- `Password`: Stores the password entered during login.
 
 ## Troubleshooting
 
-1. **View Not Found Error**:
-   - If you encounter an error like "The view 'Submit' was not found", ensure that the corresponding view exists in the correct folder (e.g., `Views/Claim/Submit.cshtml`).
+- Ensure that your SQL Server instance is running and accessible.
+- Check for any migration errors and verify the connection string in `appsettings.json`.
+- If you encounter issues while running the application, refer to the logs for more details.
 
-2. **Database Connection Issues**:
-   - If the database isn't connecting, verify the connection string in the `appsettings.json` file.
-   - Make sure your SQL Server is running and accessible.
+```
 
-3. **Login Issues**:
-   - Ensure that valid user credentials are being used.
-   - If you encounter authentication issues, check if the correct role-based access is configured.
+
 /// <summary>
     /// Caleb Voskuil
     /// ST10397320
