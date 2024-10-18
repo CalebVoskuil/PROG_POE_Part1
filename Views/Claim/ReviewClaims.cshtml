@@ -1,0 +1,57 @@
+﻿@using System.IO
+
+@model IEnumerable<PROG_POE1.Models.Claim>
+
+
+
+<h2>Pending Claims for Review</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Claim ID</th>
+            <th>Total Hours</th>
+            <th>Hourly Rate</th>
+            <th>Total Amount</th>
+            <th>Comments</th>
+            <th>Date Submitted</th>
+            <th>Supporting Document</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var claim in Model)
+        {
+            <tr>
+                <td>@claim.Id</td>
+                <td>@claim.TotalHours</td>
+                <td>@claim.HourlyRate</td>
+                <td>@claim.TotalAmount</td>
+                <td>@claim.Comments</td>
+                <td>@claim.DateSubmitted.ToString("g")</td>
+                <td>
+                    @if (!string.IsNullOrEmpty(claim.SupportingDocument))
+                    {
+                        string fileName = System.IO.Path.GetFileName(claim.SupportingDocument);
+                        <a href="~/uploads/@fileName">Download @fileName</a>
+                    }
+                    else
+                    {
+                        <span>No Document</span>
+                    }
+                </td>
+                <td>
+                    <form asp-action="ApproveClaim" asp-controller="Claim" method="post" style="display:inline;">
+                        <input type="hidden" name="id" value="@claim.Id" />
+                        <button type="submit" class="btn btn-success">Approve</button>
+                    </form>
+
+                    <form asp-action="RejectClaim" asp-controller="Claim" method="post" style="display:inline;">
+                        <input type="hidden" name="id" value="@claim.Id" />
+                        <button type="submit" class="btn btn-danger">Reject</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

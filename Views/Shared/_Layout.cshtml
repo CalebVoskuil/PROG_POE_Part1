@@ -22,7 +22,10 @@
                         <a class="nav-link" href="/Claim/Submit">Submit Claim</a>
                     </li>                 
                     <li class="nav-item">
-                        <a class="nav-link" href="/Account/Login">Login</a>
+                        <a href="@Url.Action("LoginSelection", "Account")">Login</a>
+                    </li>
+                    <li class="nav-item">
+                         <a class="nav-link" href="@Url.Action("ReviewClaims", "Claim")">Review Claims</a>
                     </li>
                 </ul>
             </div>

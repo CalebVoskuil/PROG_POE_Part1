@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using PROG_POE1.Data;
 using PROG_POE1.Models;
 using System;
@@ -64,6 +65,7 @@ namespace PROG_POE1.Controllers
                     supportingDocument.CopyTo(stream);
                 }
             }
+
             // Create a new claim object
             Claim newClaim = new Claim
             {
@@ -81,22 +83,60 @@ namespace PROG_POE1.Controllers
             _context.Claims.Add(newClaim);
             _context.SaveChanges(); // Save the changes to the database
 
-            // Redirect to Claim History page after submission
+            // Redirect to home page after submission
             return RedirectToAction("Index", "Home");
         }
 
         // View the Claim History
         public IActionResult History()
         {
-            // Pass the list of claims to the view
-            return View(Claims);
+            // Retrieve all claims from the database and pass them to the view
+            var claims = _context.Claims.ToList();
+            return View(claims);
+        }
+
+        [Authorize(Roles = "Coordinator")]
+        // View pending claims for coordinators and managers
+        public IActionResult ReviewClaims()
+        {
+            // Get all pending claims
+            var pendingClaims = _context.Claims.Where(c => c.Status == "Pending").ToList();
+            return View("ReviewClaims", pendingClaims);
+        }
+
+        [Authorize(Roles = "Coordinator")]
+        // Approve a claim
+        [HttpPost]
+        public IActionResult ApproveClaim(int id)
+        {
+            var claim = _context.Claims.FirstOrDefault(c => c.Id == id);
+            if (claim != null)
+            {
+                claim.Status = "Approved";
+                _context.SaveChanges();
+            }
+            return RedirectToAction("ReviewClaims");
+        }
+
+        [Authorize(Roles = "Coordinator")]
+        // Reject a claim
+        [HttpPost]
+        public IActionResult RejectClaim(int id)
+        {
+            var claim = _context.Claims.FirstOrDefault(c => c.Id == id);
+            if (claim != null)
+            {
+                claim.Status = "Rejected";
+                _context.SaveChanges();
+            }
+            return RedirectToAction("ReviewClaims");
         }
 
         // View specific claim details
         public IActionResult Details(int id)
         {
-            // Find the claim by ID
-            var claim = Claims.FirstOrDefault(c => c.Id == id);
+            // Find the claim by ID in the database
+            var claim = _context.Claims.FirstOrDefault(c => c.Id == id);
             if (claim == null)
             {
                 return NotFound();

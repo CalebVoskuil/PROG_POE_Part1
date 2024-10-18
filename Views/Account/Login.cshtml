@@ -1,20 +1,27 @@
-﻿@{
-    ViewBag.Title = "Login";
+﻿@model PROG_POE1.ViewModels.LoginViewModel
+
+
+@{
+    ViewData["Title"] = "Login";
 }
 
-<h2>Login</h2>
-<hr />
+<h2>Login as @ViewBag.Role</h2>
 
-<form method="post" action="/Account/Login">
+<form asp-action="Login" method="post">
+    <input type="hidden" name="role" value="@ViewBag.Role" />
     <div class="form-group">
-        <label for="Username">Username</label>
-        <input type="text" class="form-control" id="Username" name="Username" placeholder="Enter your username" required />
+        <label asp-for="Email"></label>
+        <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
     </div>
-
     <div class="form-group">
-        <label for="Password">Password</label>
-        <input type="password" class="form-control" id="Password" name="Password" placeholder="Enter your password" required />
+        <label asp-for="Password"></label>
+        <input asp-for="Password" class="form-control" />
+        <span asp-validation-for="Password" class="text-danger"></span>
     </div>
-
+    <div class="form-group">
+        <label asp-for="RememberMe"></label>
+        <input asp-for="RememberMe" />
+    </div>
     <button type="submit" class="btn btn-primary">Login</button>
 </form>

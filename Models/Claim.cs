@@ -12,6 +12,7 @@ namespace PROG_POE1.Models
         public DateTime DateSubmitted { get; set; }
         public string SupportingDocument { get; set; }
         public string Comments { get; set; }
+        public string Status { get; set; } = "Pending"; // Default status is "Pending"
     }
 
 }
