@@ -14,6 +14,7 @@ namespace PROG_POE1.Models
         public string Comments { get; set; }
         public string SubmittedBy { get; set; } // Store the lecturer's identifier (e.g., email or user ID)
         public string Status { get; set; } = "Pending"; // Default status
+        public string? RejectionReason { get; internal set; }
     }
 
 
