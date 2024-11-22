@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using PROG_POE1.Data;
 using PROG_POE1.Models;
 using System.Diagnostics;
 
@@ -8,12 +10,28 @@ namespace PROG_POE1.Controllers
     
         public class HomeController : Controller
         {
-            public IActionResult Index()
+        private readonly AppDbContext _context;
+
+        public HomeController(AppDbContext context)
+        {
+            _context = context;
+        }
+
+        public IActionResult Index()
             {
                 return View();
             }
+        public IActionResult History()
+        {
+            
+            var userId = User.Identity.Name; 
+            var lecturerClaims = _context.Claims.Where(c => c.SubmittedBy == userId).ToList(); 
 
-            public IActionResult About()
+            return View(lecturerClaims);
+        }
+
+
+        public IActionResult About()
             {
                 ViewBag.Message = "Your application description page.";
                 return View();

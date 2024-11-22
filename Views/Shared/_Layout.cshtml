@@ -31,9 +31,15 @@
                             <li class="nav-item">
                                 <a class="nav-link" href="/Claim/ReviewClaims">Review Claims</a>
                             </li>
+                            @* <li class="nav-item">
+                                <a class="nav-link" asp-controller="Claim" asp-action="ReviewClaims">Review Claims</a>
+                            </li> *@
                         }
                         @if (User.IsInRole("Lecturer"))
                         {
+                            <li class="nav-item">
+                                <a class="nav-link" href="/Home/History">Claim History</a>
+                            </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="/Claim/Submit">Submit Claims</a>
                             </li>

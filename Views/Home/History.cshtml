@@ -1,30 +1,39 @@
-﻿@{
-    ViewBag.Title = "Submit Claim";
+﻿@model IEnumerable<PROG_POE1.Models.Claim>
+
+@{
+    ViewBag.Title = "Claim History";
 }
 
-<h2>Submit New Claim</h2>
+<h2>Your Claim History</h2>
 <hr />
 
-<form method="post" action="/Claim/Submit" enctype="multipart/form-data">
-    <div class="form-group">
-        <label for="TotalHours">Total Hours Worked</label>
-        <input type="number" class="form-control" id="TotalHours" name="TotalHours" placeholder="Enter total hours" required />
-    </div>
-
-    <div class="form-group">
-        <label for="HourlyRate">Hourly Rate</label>
-        <input type="number" step="0.01" class="form-control" id="HourlyRate" name="HourlyRate" placeholder="Enter hourly rate" required />
-    </div>
-
-    <div class="form-group">
-        <label for="Comments">Comments</label>
-        <textarea class="form-control" id="Comments" name="Comments" rows="3" placeholder="Any additional information"></textarea>
-    </div>
-
-    <div class="form-group">
-        <label for="SupportingDocuments">Supporting Documents</label>
-        <input type="file" class="form-control-file" id="SupportingDocuments" name="SupportingDocuments" />
-    </div>
-
-    <button type="submit" class="btn btn-primary">Submit Claim</button>
-</form>
+@if (!Model.Any())
+{
+    <p>No claims submitted yet.</p>
+}
+else
+{
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Date Submitted</th>
+                <th>Total Hours</th>
+                <th>Hourly Rate</th>
+                <th>Total Amount</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var claim in Model)
+            {
+                <tr>
+                    <td>@claim.DateSubmitted.ToString("yyyy-MM-dd")</td>
+                    <td>@claim.TotalHours</td>
+                    <td>@claim.HourlyRate</td>
+                    <td>@claim.TotalAmount.ToString("C")</td>
+                    <td>@claim.Status</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
