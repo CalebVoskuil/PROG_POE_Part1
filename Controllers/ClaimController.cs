@@ -42,47 +42,65 @@ namespace PROG_POE1.Controllers
         public IActionResult Submit(string totalHours, string hourlyRate, string comments, IFormFile supportingDocument)
         {
             var submittedBy = User.Identity.Name;
-            // Parse input
-            decimal hours = decimal.Parse(totalHours);
-            decimal rate = decimal.Parse(hourlyRate);
 
-            // Calculate total amount
-            decimal totalAmount = hours * rate;
+            // Parse input safely
+            if (!decimal.TryParse(totalHours, out var hours))
+            {
+                ModelState.AddModelError("totalHours", "Invalid input for total hours.");
+                return View();
+            }
+            if (!decimal.TryParse(hourlyRate, out var rate))
+            {
+                ModelState.AddModelError("hourlyRate", "Invalid input for hourly rate.");
+                return View();
+            }
 
-            // Validate supporting document
+            // Validate file
+            const long MaxFileSize = 5 * 1024 * 1024; // 5MB
             string filePath = null;
             if (supportingDocument == null || supportingDocument.Length == 0)
             {
                 ModelState.AddModelError("supportingDocument", "A supporting document is required.");
                 return View();
             }
-            else
+            if (supportingDocument.Length > MaxFileSize)
             {
-                var fileExtension = Path.GetExtension(supportingDocument.FileName).ToLower();
-                var allowedExtensions = new[] { ".pdf", ".docx", ".xlsx" };
-                if (!allowedExtensions.Contains(fileExtension))
-                {
-                    ModelState.AddModelError("supportingDocument", "Invalid file type. Only PDF, DOCX, and XLSX are allowed.");
-                    return View();
-                }
+                ModelState.AddModelError("supportingDocument", "The file size exceeds the 5MB limit.");
+                return View();
+            }
+            var allowedExtensions = new[] { ".pdf", ".docx", ".xlsx" };
+            var fileExtension = Path.GetExtension(supportingDocument.FileName).ToLower();
+            if (!allowedExtensions.Contains(fileExtension))
+            {
+                ModelState.AddModelError("supportingDocument", "Invalid file type. Only PDF, DOCX, and XLSX are allowed.");
+                return View();
+            }
 
-                // Save the file
+            // Save file
+            try
+            {
                 var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
                 if (!Directory.Exists(uploadsFolder))
                 {
                     Directory.CreateDirectory(uploadsFolder);
                 }
-
                 filePath = Path.Combine(uploadsFolder, supportingDocument.FileName);
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     supportingDocument.CopyTo(stream);
                 }
             }
+            catch (Exception)
+            {
+                ModelState.AddModelError("supportingDocument", "An error occurred while saving the file. Please try again.");
+                return View();
+            }
 
+            // Calculate total amount
+            var totalAmount = hours * rate;
 
             // Automated verification
-            string status = "Approved"; // Default status
+            var status = "Approved";
             string rejectionReason = null;
 
             if (hours > ClaimValidationRules.MaxHoursPerMonth)
@@ -96,7 +114,7 @@ namespace PROG_POE1.Controllers
                 rejectionReason = $"Hourly rate ({rate:C}) is outside the allowed range ({ClaimValidationRules.MinHourlyRate:C} - {ClaimValidationRules.MaxHourlyRate:C}).";
             }
 
-            // Save the claim
+            // Save claim
             var newClaim = new Claim
             {
                 TotalHours = totalHours,
@@ -104,28 +122,25 @@ namespace PROG_POE1.Controllers
                 TotalAmount = totalAmount,
                 SupportingDocument = filePath,
                 Comments = comments,
-                SubmittedBy = HttpContext.User.Identity.Name, // Get the logged-in user's name
+                SubmittedBy = submittedBy,
                 DateSubmitted = DateTime.Now,
-                Status = status
+                Status = status,
+                RejectionReason = rejectionReason
             };
-
             _context.Claims.Add(newClaim);
             _context.SaveChanges();
 
-            // Notify coordinator if the claim is pending
+            // Notify coordinator for pending claims
             if (status == "Pending")
             {
+                // Notify (example code for email)
                 TempData["RejectionReason"] = rejectionReason;
-                return RedirectToAction("Index","Home");
+                return RedirectToAction("Index", "Home");
             }
 
-            
-        
-
-
-            // Redirect to home page after submission
             return RedirectToAction("Index", "Home");
         }
+
 
         // View the Claim History
         public IActionResult History()
