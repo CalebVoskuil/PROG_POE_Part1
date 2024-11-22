@@ -10,7 +10,13 @@ using System.Linq;
 namespace PROG_POE1.Controllers
 {
 
-    
+    public static class ClaimValidationRules
+    {
+        public const decimal MaxHoursPerMonth = 160; // Example: 4 weeks * 40 hours
+        public const decimal MinHourlyRate = 10.0m; // Minimum allowed hourly rate
+        public const decimal MaxHourlyRate = 100.0m; // Maximum allowed hourly rate
+    }
+
 
     public class ClaimController : Controller
     {
@@ -33,62 +39,89 @@ namespace PROG_POE1.Controllers
 
         // Handle form submission of a new claim
         [HttpPost]
-        public IActionResult Submit(string totalHours, string hourlyRate, string comments, string totalAmount, IFormFile supportingDocument)
+        public IActionResult Submit(string totalHours, string hourlyRate, string comments, IFormFile supportingDocument)
         {
-            if (!ModelState.IsValid)
-            {
-                return View();
-            }
+            var submittedBy = User.Identity.Name;
+            // Parse input
+            decimal hours = decimal.Parse(totalHours);
+            decimal rate = decimal.Parse(hourlyRate);
 
-            // Validate and parse inputs
-            if (!decimal.TryParse(totalHours, out decimal hours) || hours <= 0 ||
-                !decimal.TryParse(hourlyRate, out decimal rate) || rate <= 0 ||
-                !decimal.TryParse(totalAmount, out decimal amount) || amount <= 0)
-            {
-                ModelState.AddModelError("", "Invalid input. Please ensure all values are correct.");
-                return View();
-            }
+            // Calculate total amount
+            decimal totalAmount = hours * rate;
 
+            // Validate supporting document
             string filePath = null;
-            if (supportingDocument != null && supportingDocument.Length > 0)
+            if (supportingDocument == null || supportingDocument.Length == 0)
+            {
+                ModelState.AddModelError("supportingDocument", "A supporting document is required.");
+                return View();
+            }
+            else
             {
                 var fileExtension = Path.GetExtension(supportingDocument.FileName).ToLower();
                 var allowedExtensions = new[] { ".pdf", ".docx", ".xlsx" };
                 if (!allowedExtensions.Contains(fileExtension))
                 {
-                    ModelState.AddModelError("SupportingDocument", "Invalid file type. Only PDF, DOCX, and XLSX files are allowed.");
+                    ModelState.AddModelError("supportingDocument", "Invalid file type. Only PDF, DOCX, and XLSX are allowed.");
                     return View();
                 }
 
+                // Save the file
                 var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
                 if (!Directory.Exists(uploadsFolder))
                 {
                     Directory.CreateDirectory(uploadsFolder);
                 }
 
-                filePath = Path.Combine(uploadsFolder, $"{Guid.NewGuid()}{fileExtension}");
+                filePath = Path.Combine(uploadsFolder, supportingDocument.FileName);
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     supportingDocument.CopyTo(stream);
                 }
             }
 
-            // Create and save the new claim
+
+            // Automated verification
+            string status = "Approved"; // Default status
+            string rejectionReason = null;
+
+            if (hours > ClaimValidationRules.MaxHoursPerMonth)
+            {
+                status = "Pending";
+                rejectionReason = $"Hours worked ({hours}) exceed the maximum allowed per month ({ClaimValidationRules.MaxHoursPerMonth}).";
+            }
+            if (rate < ClaimValidationRules.MinHourlyRate || rate > ClaimValidationRules.MaxHourlyRate)
+            {
+                status = "Pending";
+                rejectionReason = $"Hourly rate ({rate:C}) is outside the allowed range ({ClaimValidationRules.MinHourlyRate:C} - {ClaimValidationRules.MaxHourlyRate:C}).";
+            }
+
+            // Save the claim
             var newClaim = new Claim
             {
                 TotalHours = totalHours,
                 HourlyRate = hourlyRate,
-                TotalAmount = amount,
+                TotalAmount = totalAmount,
                 SupportingDocument = filePath,
                 Comments = comments,
-                DateSubmitted = DateTime.Now
+                SubmittedBy = HttpContext.User.Identity.Name, // Get the logged-in user's name
+                DateSubmitted = DateTime.Now,
+                Status = status
             };
 
-
-            // Add the new claim to the database
             _context.Claims.Add(newClaim);
-            _context.SaveChanges(); // Save the changes to the database
-            TempData["Message"] = "Claim submitted successfully!";
+            _context.SaveChanges();
+
+            // Notify coordinator if the claim is pending
+            if (status == "Pending")
+            {
+                TempData["RejectionReason"] = rejectionReason;
+                return RedirectToAction("Index","Home");
+            }
+
+            
+        
+
 
             // Redirect to home page after submission
             return RedirectToAction("Index", "Home");
