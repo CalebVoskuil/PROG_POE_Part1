@@ -1,12 +1,54 @@
 ﻿@{
-    ViewBag.Title = "Home";
+    ViewData["Title"] = "Home";
 }
 
-<div class="jumbotron text-center">
-    <h1 class="display-4">Welcome to CMCS</h1>
-    <p class="lead">Easily manage your monthly contract claims.</p>
-    <hr class="my-4" />
-    <p>Submit claims, track approval, and review claim history with ease.</p>
-   
+<div class="container mt-5">
+    <!-- Hero Section -->
+    <div class="jumbotron text-center bg-primary text-white p-5 rounded">
+        <h1 class="display-4">Welcome to the Claim Management System</h1>
+        <p class="lead">Submit, Review, and Track claims with ease.</p>
+        <a href="/Account/Login" class="btn btn-light btn-lg mt-3">Get Started</a>
+    </div>
+
+    <!-- Features Section -->
+    <div class="row text-center mt-5">
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <i class="bi bi-person-badge-fill display-4 text-primary"></i>
+                    <h5 class="card-title mt-3">Lecturer</h5>
+                    <p class="card-text">Submit your claims and track their status seamlessly.</p>
+                    <a href="/Lecturer/Submit" class="btn btn-outline-primary">Submit Claim</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <i class="bi bi-file-earmark-check-fill display-4 text-success"></i>
+                    <h5 class="card-title mt-3">Coordinator</h5>
+                    <p class="card-text">Review, approve, or deny claims efficiently.</p>
+                    <a href="/Claim/ReviewClaims" class="btn btn-outline-success">Review Claims</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <i class="bi bi-info-circle-fill display-4 text-info"></i>
+                    <h5 class="card-title mt-3">About</h5>
+                    <p class="card-text">Learn more about the system and its features.</p>
+                    <a href="/Home/About" class="btn btn-outline-info">Learn More</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center mt-5">
+        <p class="text-muted">&copy; 2024 Claim Management System. All Rights Reserved.</p>
+    </footer>
 </div>
 
+<!-- Optional Bootstrap Icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
