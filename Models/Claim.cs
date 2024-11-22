@@ -2,7 +2,7 @@
 
 namespace PROG_POE1.Models
 {
-    public class Claim 
+    public class Claim
     {
         [Key]
         public int Id { get; set; }
@@ -12,7 +12,8 @@ namespace PROG_POE1.Models
         public DateTime DateSubmitted { get; set; }
         public string SupportingDocument { get; set; }
         public string Comments { get; set; }
-        public string Status { get; set; } = "Pending"; // Default status is "Pending"
+        public string Status { get; set; } = "Pending"; // Default status
     }
+
 
 }

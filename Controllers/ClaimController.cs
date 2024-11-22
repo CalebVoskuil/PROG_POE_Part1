@@ -33,14 +33,22 @@ namespace PROG_POE1.Controllers
 
         // Handle form submission of a new claim
         [HttpPost]
-        public IActionResult Submit(string totalHours, string hourlyRate, string comments, IFormFile supportingDocument)
+        public IActionResult Submit(string totalHours, string hourlyRate, string comments, string totalAmount, IFormFile supportingDocument)
         {
-            // Parse total hours and hourly rate
-            decimal hours = decimal.Parse(totalHours);
-            decimal rate = decimal.Parse(hourlyRate);
+            if (!ModelState.IsValid)
+            {
+                return View();
+            }
 
-            // Calculate total amount
-            decimal totalAmount = hours * rate;
+            // Validate and parse inputs
+            if (!decimal.TryParse(totalHours, out decimal hours) || hours <= 0 ||
+                !decimal.TryParse(hourlyRate, out decimal rate) || rate <= 0 ||
+                !decimal.TryParse(totalAmount, out decimal amount) || amount <= 0)
+            {
+                ModelState.AddModelError("", "Invalid input. Please ensure all values are correct.");
+                return View();
+            }
+
             string filePath = null;
             if (supportingDocument != null && supportingDocument.Length > 0)
             {
@@ -48,40 +56,39 @@ namespace PROG_POE1.Controllers
                 var allowedExtensions = new[] { ".pdf", ".docx", ".xlsx" };
                 if (!allowedExtensions.Contains(fileExtension))
                 {
-                    ModelState.AddModelError("supportingDocument", "Invalid file type. Only PDF, DOCX, and XLSX are allowed.");
+                    ModelState.AddModelError("SupportingDocument", "Invalid file type. Only PDF, DOCX, and XLSX files are allowed.");
                     return View();
                 }
 
-                // Save the file to a designated folder, e.g., "wwwroot/uploads"
                 var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
                 if (!Directory.Exists(uploadsFolder))
                 {
                     Directory.CreateDirectory(uploadsFolder);
                 }
 
-                filePath = Path.Combine(uploadsFolder, supportingDocument.FileName);
+                filePath = Path.Combine(uploadsFolder, $"{Guid.NewGuid()}{fileExtension}");
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     supportingDocument.CopyTo(stream);
                 }
             }
 
-            // Create a new claim object
-            Claim newClaim = new Claim
+            // Create and save the new claim
+            var newClaim = new Claim
             {
-                
                 TotalHours = totalHours,
-                HourlyRate = hourlyRate, 
-                TotalAmount = totalAmount,
+                HourlyRate = hourlyRate,
+                TotalAmount = amount,
                 SupportingDocument = filePath,
                 Comments = comments,
                 DateSubmitted = DateTime.Now
-
             };
+
 
             // Add the new claim to the database
             _context.Claims.Add(newClaim);
             _context.SaveChanges(); // Save the changes to the database
+            TempData["Message"] = "Claim submitted successfully!";
 
             // Redirect to home page after submission
             return RedirectToAction("Index", "Home");
